@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="app__header">
+        <h1 class="app__title">Todo</h1>
+        <p class="app__subtitle">오늘 할 일을 정리하세요</p>
+      </header>
+
+      <!-- 일간 뷰: 날짜 표시 및 이동 -->
+      <section class="date-nav" aria-label="날짜 선택">
+        <button
+          type="button"
+          id="prevDateButton"
+          class="date-nav__button"
+          aria-label="이전 날짜"
+        >
+          ‹
+        </button>
+        <p id="selectedDateLabel" class="date-nav__label"></p>
+        <button
+          type="button"
+          id="nextDateButton"
+          class="date-nav__button"
+          aria-label="다음 날짜"
+        >
+          ›
+        </button>
+      </section>
+
+      <!-- Todo 생성 폼 -->
+      <section class="todo-form" aria-label="새 할 일 추가">
+        <input
+          type="text"
+          id="todoInput"
+          class="todo-form__input"
+          placeholder="할 일을 입력하세요"
+          autocomplete="off"
+          maxlength="200"
+        />
+        <button type="button" id="addTodoButton" class="todo-form__button">
+          추가
+        </button>
+      </section>
+
+      <!-- 빈 입력값 안내 메시지 -->
+      <p id="emptyInputMessage" class="message message--error" hidden>
+        할 일을 입력해 주세요.
+      </p>
+
+      <!-- 상태별 필터 탭 -->
+      <nav class="filter-tabs" aria-label="Todo 필터">
+        <button
+          type="button"
+          class="filter-tabs__button filter-tabs__button--active"
+          data-filter="all"
+          aria-selected="true"
+        >
+          전체
+        </button>
+        <button
+          type="button"
+          class="filter-tabs__button"
+          data-filter="active"
+          aria-selected="false"
+        >
+          진행 중
+        </button>
+        <button
+          type="button"
+          class="filter-tabs__button"
+          data-filter="completed"
+          aria-selected="false"
+        >
+          완료
+        </button>
+      </nav>
+
+      <!-- Todo 목록 -->
+      <ul id="todoList" class="todo-list" aria-label="할 일 목록"></ul>
+
+      <!-- 목록이 비었을 때 표시 -->
+      <p id="emptyListMessage" class="message message--empty">
+        등록된 할 일이 없습니다.
+      </p>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -5,9 +5,10 @@ const todoListElement = document.getElementById("todoList");
 const emptyInputMessage = document.getElementById("emptyInputMessage");
 const emptyListMessage = document.getElementById("emptyListMessage");
 const filterTabButtons = document.querySelectorAll(".filter-tabs__button");
-const prevDateButton = document.getElementById("prevDateButton");
-const nextDateButton = document.getElementById("nextDateButton");
-const selectedDateLabel = document.getElementById("selectedDateLabel");
+const prevWeekButton = document.getElementById("prevWeekButton");
+const nextWeekButton = document.getElementById("nextWeekButton");
+const weekRangeLabel = document.getElementById("weekRangeLabel");
+const weekDaysContainer = document.getElementById("weekDaysContainer");
 
 // ===== 필터 상수 =====
 const FILTER_ALL = "all";
@@ -32,6 +33,9 @@ let currentFilter = FILTER_ALL;
 // 일간 뷰: 현재 선택된 날짜 (시간은 00:00:00으로 정규화)
 let selectedDate = getTodayAtMidnight();
 
+// 주간 뷰: 화면에 표시 중인 주의 시작일 (일요일)
+let weekStartDate = getWeekStartDate(getTodayAtMidnight());
+
 // ===== 이벤트 리스너 등록 =====
 addTodoButton.addEventListener("click", handleAddTodo);
 
@@ -42,9 +46,9 @@ filterTabButtons.forEach((button) => {
   });
 });
 
-// 이전 / 다음 날짜로 이동
-prevDateButton.addEventListener("click", () => moveSelectedDate(-1));
-nextDateButton.addEventListener("click", () => moveSelectedDate(1));
+// 이전 / 다음 주로 이동
+prevWeekButton.addEventListener("click", () => moveWeek(-1));
+nextWeekButton.addEventListener("click", () => moveWeek(1));
 
 todoInput.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
@@ -124,38 +128,114 @@ function isSameDay(dateA, dateB) {
   return formatDateKey(dateA) === formatDateKey(dateB);
 }
 
-// 화면에 표시할 날짜 문자열 (오늘이면 '오늘' 접두사 포함)
-function formatDisplayDate(date) {
-  const year = date.getFullYear();
-  const month = date.getMonth() + 1;
-  const day = date.getDate();
-  const weekday = WEEKDAY_LABELS[date.getDay()];
-  const formatted = `${year}년 ${month}월 ${day}일 (${weekday})`;
+// 해당 날짜가 속한 주의 시작일(일요일) 반환
+function getWeekStartDate(date) {
+  const weekStart = new Date(date);
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+  return weekStart;
+}
 
-  if (isSameDay(date, getTodayAtMidnight())) {
-    return `오늘 · ${formatted}`;
+// 주 시작일부터 7일간의 Date 배열 반환
+function getWeekDates(weekStart) {
+  const weekDates = [];
+
+  for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+    const date = new Date(weekStart);
+    date.setDate(weekStart.getDate() + dayIndex);
+    weekDates.push(date);
   }
 
-  return formatted;
+  return weekDates;
 }
 
-// 선택된 날짜 라벨 갱신
-function updateDateDisplay() {
-  selectedDateLabel.textContent = formatDisplayDate(selectedDate);
+// 주간 캘린더 상단에 표시할 기간 문자열
+function formatWeekRange(weekStart) {
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+
+  const year = weekStart.getFullYear();
+  const startMonth = weekStart.getMonth() + 1;
+  const startDay = weekStart.getDate();
+  const endMonth = weekEnd.getMonth() + 1;
+  const endDay = weekEnd.getDate();
+
+  if (startMonth === endMonth) {
+    return `${year}년 ${startMonth}월 ${startDay}일 - ${endDay}일`;
+  }
+
+  return `${year}년 ${startMonth}월 ${startDay}일 - ${endMonth}월 ${endDay}일`;
 }
 
-// 날짜 이동 (dayOffset: -1이면 하루 전, +1이면 하루 후)
-function moveSelectedDate(dayOffset) {
-  const newDate = new Date(selectedDate);
-  newDate.setDate(newDate.getDate() + dayOffset);
-  newDate.setHours(0, 0, 0, 0);
-  selectedDate = newDate;
+// 특정 날짜의 Todo 개수 반환
+function getTodoCountByDateKey(dateKey) {
+  return todos.filter((todo) => todo.date === dateKey).length;
+}
 
-  // 다른 날짜로 이동 시 수정 모드 해제
+// 날짜 선택
+function selectDate(date) {
+  selectedDate = new Date(date);
+  selectedDate.setHours(0, 0, 0, 0);
   editingTodoId = null;
-
-  updateDateDisplay();
+  renderWeekCalendar();
   renderTodoList();
+}
+
+// 주 이동 (weekOffset: -1이면 이전 주, +1이면 다음 주)
+function moveWeek(weekOffset) {
+  const newWeekStart = new Date(weekStartDate);
+  newWeekStart.setDate(newWeekStart.getDate() + weekOffset * 7);
+  weekStartDate = newWeekStart;
+  renderWeekCalendar();
+}
+
+// 주간 캘린더 UI 렌더링
+function renderWeekCalendar() {
+  weekRangeLabel.textContent = formatWeekRange(weekStartDate);
+  weekDaysContainer.innerHTML = "";
+
+  const weekDates = getWeekDates(weekStartDate);
+  const today = getTodayAtMidnight();
+
+  weekDates.forEach((date) => {
+    const dateKey = formatDateKey(date);
+    const todoCount = getTodoCountByDateKey(dateKey);
+    const isToday = isSameDay(date, today);
+    const isSelected = isSameDay(date, selectedDate);
+
+    const dayButton = document.createElement("button");
+    dayButton.type = "button";
+    dayButton.className = "week-calendar__day";
+    dayButton.setAttribute("aria-label", `${formatDateKey(date)} 할 일 보기`);
+
+    if (isToday) {
+      dayButton.classList.add("week-calendar__day--today");
+    }
+
+    if (isSelected) {
+      dayButton.classList.add("week-calendar__day--selected");
+    }
+
+    if (isToday && isSelected) {
+      dayButton.setAttribute("aria-current", "date");
+    }
+
+    const weekdaySpan = document.createElement("span");
+    weekdaySpan.className = "week-calendar__weekday";
+    weekdaySpan.textContent = WEEKDAY_LABELS[date.getDay()];
+
+    const dateSpan = document.createElement("span");
+    dateSpan.className = "week-calendar__date";
+    dateSpan.textContent = String(date.getDate());
+
+    const countSpan = document.createElement("span");
+    countSpan.className = "week-calendar__count";
+    countSpan.textContent = todoCount > 0 ? `${todoCount}개` : "-";
+
+    dayButton.append(weekdaySpan, dateSpan, countSpan);
+    dayButton.addEventListener("click", () => selectDate(date));
+    weekDaysContainer.appendChild(dayButton);
+  });
 }
 
 // ===== Create: 새 Todo 추가 =====
@@ -233,6 +313,7 @@ function renderTodoList() {
   });
 
   updateEmptyListMessage();
+  renderWeekCalendar();
 }
 
 // Todo 항목 DOM 요소 생성
@@ -427,6 +508,7 @@ todoInput.addEventListener("input", hideEmptyInputMessage);
 
 // ===== 초기 렌더링 =====
 loadTodosFromLocalStorage();
-updateDateDisplay();
+weekStartDate = getWeekStartDate(selectedDate);
 updateFilterTabStyles();
+renderWeekCalendar();
 renderTodoList();

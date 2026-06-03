@@ -75,7 +75,7 @@ function loadTodosFromLocalStorage() {
     const parsedData = JSON.parse(savedData);
 
     if (Array.isArray(parsedData.todos)) {
-      todos = parsedData.todos.map(normalizeTodoFromStorage);
+      todos = parsedData.todos;
     }
 
     if (typeof parsedData.nextTodoId === "number" && parsedData.nextTodoId > 0) {
@@ -90,16 +90,6 @@ function loadTodosFromLocalStorage() {
     todos = [];
     nextTodoId = 1;
   }
-}
-
-// 저장된 Todo 항목 형식 정규화 (date 필드가 없는 이전 데이터 대비)
-function normalizeTodoFromStorage(todo) {
-  return {
-    id: todo.id,
-    text: todo.text,
-    completed: Boolean(todo.completed),
-    date: todo.date || formatDateKey(getTodayAtMidnight()),
-  };
 }
 
 // Todo 목록에서 다음 id 값 계산

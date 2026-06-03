@@ -16,6 +16,9 @@ const FILTER_COMPLETED = "completed";
 
 const WEEKDAY_LABELS = ["일", "월", "화", "수", "목", "금", "토"];
 
+// 로컬 스토리지에 저장할 데이터 키
+const STORAGE_KEY = "todoAppData";
+
 // ===== 상태: Todo 목록을 메모리에 저장 =====
 let todos = [];
 let nextTodoId = 1;
@@ -48,6 +51,67 @@ todoInput.addEventListener("keydown", (event) => {
     handleAddTodo();
   }
 });
+
+// ===== Storage: 로컬 스토리지 저장·불러오기 =====
+// Todo 변경사항을 JSON 형식으로 로컬 스토리지에 저장
+function saveTodosToLocalStorage() {
+  const dataToSave = {
+    todos: todos,
+    nextTodoId: nextTodoId,
+  };
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+}
+
+// 로컬 스토리지에서 Todo 데이터를 JSON 형식으로 불러오기
+function loadTodosFromLocalStorage() {
+  const savedData = localStorage.getItem(STORAGE_KEY);
+
+  if (!savedData) {
+    return;
+  }
+
+  try {
+    const parsedData = JSON.parse(savedData);
+
+    if (Array.isArray(parsedData.todos)) {
+      todos = parsedData.todos.map(normalizeTodoFromStorage);
+    }
+
+    if (typeof parsedData.nextTodoId === "number" && parsedData.nextTodoId > 0) {
+      nextTodoId = parsedData.nextTodoId;
+    } else {
+      // nextTodoId가 없으면 기존 Todo id 기준으로 재계산
+      updateNextTodoIdFromTodos();
+    }
+  } catch (error) {
+    // JSON 파싱 실패 시 저장 데이터를 무시하고 빈 목록으로 시작
+    console.error("로컬 스토리지 데이터를 불러오지 못했습니다.", error);
+    todos = [];
+    nextTodoId = 1;
+  }
+}
+
+// 저장된 Todo 항목 형식 정규화 (date 필드가 없는 이전 데이터 대비)
+function normalizeTodoFromStorage(todo) {
+  return {
+    id: todo.id,
+    text: todo.text,
+    completed: Boolean(todo.completed),
+    date: todo.date || formatDateKey(getTodayAtMidnight()),
+  };
+}
+
+// Todo 목록에서 다음 id 값 계산
+function updateNextTodoIdFromTodos() {
+  if (todos.length === 0) {
+    nextTodoId = 1;
+    return;
+  }
+
+  const maxId = Math.max(...todos.map((todo) => todo.id));
+  nextTodoId = maxId + 1;
+}
 
 // ===== Date: 날짜 유틸리티 =====
 // 오늘 날짜를 자정(00:00:00)으로 반환
@@ -125,6 +189,7 @@ function handleAddTodo() {
   };
 
   todos.push(newTodo);
+  saveTodosToLocalStorage();
   todoInput.value = "";
   todoInput.focus();
   renderTodoList();
@@ -306,6 +371,7 @@ function saveEditedTodo(todoId, newText) {
   const todo = todos.find((item) => item.id === todoId);
   if (todo) {
     todo.text = trimmedText;
+    saveTodosToLocalStorage();
   }
 
   editingTodoId = null;
@@ -322,6 +388,7 @@ function toggleTodoComplete(todoId) {
   const todo = todos.find((item) => item.id === todoId);
   if (todo) {
     todo.completed = !todo.completed;
+    saveTodosToLocalStorage();
   }
   renderTodoList();
 }
@@ -334,6 +401,7 @@ function deleteTodo(todoId) {
   }
 
   todos = todos.filter((item) => item.id !== todoId);
+  saveTodosToLocalStorage();
   renderTodoList();
 }
 
@@ -368,6 +436,7 @@ function updateEmptyListMessage() {
 todoInput.addEventListener("input", hideEmptyInputMessage);
 
 // ===== 초기 렌더링 =====
+loadTodosFromLocalStorage();
 updateDateDisplay();
 updateFilterTabStyles();
 renderTodoList();

@@ -1,18 +1,61 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import TodoForm from './components/TodoForm'
+import TodoList from './components/TodoList'
+import { useTodos } from './hooks/useTodos'
 
+/**
+ * App - Todo 앱의 최상위 컴포넌트
+ *
+ * state 관리는 useTodos 훅에 위임하고,
+ * 하위 컴포넌트에는 필요한 데이터와 콜백만 props로 전달합니다.
+ */
 function App() {
-  const [count, setCount] = useState(0)
+  const {
+    todos,
+    inputValue,
+    inputError,
+    handleInputChange,
+    addTodo,
+    deleteTodo,
+    toggleTodoComplete,
+    updateTodoText,
+  } = useTodos()
+
+  const completedCount = todos.filter((todo) => todo.isCompleted).length
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-100">
-      <h1 className="text-3xl font-bold text-blue-600 underline">
-        Todo 앱 마이그레이션 시작!
-      </h1>
-      <p className="mt-4 text-gray-600">Tailwind CSS v4 스타일링이 정상적으로 적용되었습니다.</p>
+    <div className="flex min-h-screen items-start justify-center bg-gray-50 px-4 py-12 sm:py-20">
+      <div className="w-full max-w-lg">
+        {/* 헤더 */}
+        <header className="mb-8 text-center">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+            My <span className="text-[#672be0]">Todo</span>
+          </h1>
+          {todos.length > 0 && (
+            <p className="mt-2 text-sm text-gray-400">
+              {completedCount} / {todos.length} 완료
+            </p>
+          )}
+        </header>
+
+        {/* 메인 카드 */}
+        <main className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+          <TodoForm
+            inputValue={inputValue}
+            inputError={inputError}
+            onInputChange={handleInputChange}
+            onAddTodo={addTodo}
+          />
+
+          <div className="mt-6 border-t border-gray-100 pt-6">
+            <TodoList
+              todos={todos}
+              onToggleComplete={toggleTodoComplete}
+              onUpdateText={updateTodoText}
+              onDelete={deleteTodo}
+            />
+          </div>
+        </main>
+      </div>
     </div>
   )
 }

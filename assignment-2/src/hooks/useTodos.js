@@ -11,8 +11,11 @@ export function useTodos() {
   const [inputValue, setInputValue] = useState('')
   const [inputError, setInputError] = useState('')
 
-  /** 새 Todo 추가 - 빈 값이면 예외 처리 후 생성하지 않음 */
-  const addTodo = () => {
+  /**
+   * 새 Todo 추가 - 빈 값이면 예외 처리 후 생성하지 않음
+   * @param {string} selectedDate - 현재 선택된 날짜 ('YYYY-MM-DD'), Todo에 자동 저장됨
+   */
+  const addTodo = (selectedDate) => {
     const trimmedText = inputValue.trim()
 
     if (!trimmedText) {
@@ -24,6 +27,7 @@ export function useTodos() {
       id: crypto.randomUUID(),
       text: trimmedText,
       isCompleted: false,
+      date: selectedDate,
     }
 
     setTodos((prevTodos) => [...prevTodos, newTodo])

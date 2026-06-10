@@ -1,15 +1,35 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { loadTodoStorage, saveTodoStorage } from '../utils/todoStorage'
+
+/** 초기 데이터를 한 번만 불러오기 위한 캐시 (useState 초기화 시 중복 호출 방지) */
+let cachedInitialData = null
+
+function getInitialTodoData() {
+  if (!cachedInitialData) {
+    cachedInitialData = loadTodoStorage()
+  }
+  return cachedInitialData
+}
 
 /**
  * useTodos - Todo 목록의 상태와 CRUD 로직을 관리하는 커스텀 훅
  *
- * state: todos(목록), inputValue(입력값), inputError(유효성 오류 메시지)
- * 이 훅이 데이터의 단일 출처(Single Source of Truth) 역할을 합니다.
+ * state: todos(목록), nextId(다음 ID), inputValue(입력값), inputError(유효성 오류 메시지)
+ * todos·nextId 변경 시 useEffect로 로컬 스토리지에 자동 저장됩니다.
  */
 export function useTodos() {
-  const [todos, setTodos] = useState([])
+  const [todos, setTodos] = useState(() => getInitialTodoData().todos)
+  const [nextId, setNextId] = useState(() => getInitialTodoData().nextId)
   const [inputValue, setInputValue] = useState('')
   const [inputError, setInputError] = useState('')
+
+  /**
+   * Todo 또는 nextId가 변경될 때마다 로컬 스토리지에 자동 저장
+   * JSON.stringify로 직렬화하여 저장합니다.
+   */
+  useEffect(() => {
+    saveTodoStorage({ todos, nextId })
+  }, [todos, nextId])
 
   /**
    * 새 Todo 추가 - 빈 값이면 예외 처리 후 생성하지 않음
@@ -24,13 +44,14 @@ export function useTodos() {
     }
 
     const newTodo = {
-      id: crypto.randomUUID(),
+      id: nextId,
       text: trimmedText,
       isCompleted: false,
       date: selectedDate,
     }
 
     setTodos((prevTodos) => [...prevTodos, newTodo])
+    setNextId((prevId) => prevId + 1)
     setInputValue('')
     setInputError('')
   }

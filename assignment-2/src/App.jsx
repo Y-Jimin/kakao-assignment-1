@@ -1,12 +1,17 @@
+import { useState } from 'react'
 import TodoForm from './components/TodoForm'
+import TodoFilter from './components/TodoFilter'
 import TodoList from './components/TodoList'
+import { TODO_FILTERS } from './constants/todoFilters'
 import { useTodos } from './hooks/useTodos'
+import { filterTodos } from './utils/filterTodos'
 
 /**
  * App - Todo 앱의 최상위 컴포넌트
  *
- * state 관리는 useTodos 훅에 위임하고,
- * 하위 컴포넌트에는 필요한 데이터와 콜백만 props로 전달합니다.
+ * Todo 데이터 state는 useTodos 훅이 관리하고,
+ * 필터 state는 이 컴포넌트에서 useState로 관리합니다.
+ * addTodo 시 필터를 변경하지 않으므로 탭 선택이 유지됩니다.
  */
 function App() {
   const {
@@ -20,6 +25,10 @@ function App() {
     updateTodoText,
   } = useTodos()
 
+  // 필터 탭 상태 - Todo 추가/수정/삭제와 독립적으로 유지됨
+  const [activeFilter, setActiveFilter] = useState(TODO_FILTERS.ALL)
+
+  const filteredTodos = filterTodos(todos, activeFilter)
   const completedCount = todos.filter((todo) => todo.isCompleted).length
 
   return (
@@ -46,9 +55,20 @@ function App() {
             onAddTodo={addTodo}
           />
 
-          <div className="mt-6 border-t border-gray-100 pt-6">
+          {todos.length > 0 && (
+            <div className="mt-6">
+              <TodoFilter
+                activeFilter={activeFilter}
+                onFilterChange={setActiveFilter}
+              />
+            </div>
+          )}
+
+          <div className={`${todos.length > 0 ? 'mt-4' : 'mt-6'} border-t border-gray-100 pt-6`}>
             <TodoList
-              todos={todos}
+              todos={filteredTodos}
+              activeFilter={activeFilter}
+              hasAnyTodos={todos.length > 0}
               onToggleComplete={toggleTodoComplete}
               onUpdateText={updateTodoText}
               onDelete={deleteTodo}

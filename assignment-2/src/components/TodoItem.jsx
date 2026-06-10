@@ -5,7 +5,7 @@ import { useState } from 'react'
  *
  * props(부모로부터 받는 데이터·콜백):
  *   - todo: 표시할 Todo 객체 { id, text, isCompleted }
- *   - onToggleComplete: 완료 상태 토글 콜백
+ *   - onToggleComplete: '완료' / '미완료' 버튼으로 완료 상태 토글 콜백
  *   - onUpdateText: 텍스트 수정 콜백
  *   - onDelete: 삭제 콜백
  *
@@ -52,23 +52,13 @@ function TodoItem({ todo, onToggleComplete, onUpdateText, onDelete }) {
 
   return (
     <li className="group flex items-center gap-3 rounded-lg border border-gray-100 bg-white px-4 py-3 transition-shadow hover:shadow-sm">
-      {/* 완료 체크박스 */}
-      <button
-        type="button"
-        onClick={() => onToggleComplete(todo.id)}
-        aria-label={todo.isCompleted ? '완료 취소' : '완료 표시'}
-        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
-          todo.isCompleted
-            ? 'border-[#672be0] bg-[#672be0]'
-            : 'border-gray-300 hover:border-[#672be0]'
+      {/* 리스트 항목 표시용 점(bullet) */}
+      <span
+        aria-hidden="true"
+        className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+          todo.isCompleted ? 'bg-gray-300' : 'bg-[#672be0]'
         }`}
-      >
-        {todo.isCompleted && (
-          <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        )}
-      </button>
+      />
 
       {/* Todo 텍스트 또는 수정 입력창 */}
       <div className="min-w-0 flex-1">
@@ -127,6 +117,17 @@ function TodoItem({ todo, onToggleComplete, onUpdateText, onDelete }) {
               className="rounded-md px-2 py-1 text-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-[#672be0]"
             >
               수정
+            </button>
+            <button
+              type="button"
+              onClick={() => onToggleComplete(todo.id)}
+              className={`rounded-md px-2 py-1 text-xs font-medium ${
+                todo.isCompleted
+                  ? 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                  : 'text-[#672be0] hover:bg-[#672be0]/10'
+              }`}
+            >
+              {todo.isCompleted ? '미완료' : '완료'}
             </button>
             <button
               type="button"

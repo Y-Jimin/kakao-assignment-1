@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTodoById } from "@/lib/api";
+import { getTodoById } from "@/app/actions";
 import TodoEditForm from "../components/TodoEditForm";
 import TodoItemDisplay from "../components/TodoItemDisplay";
 
@@ -10,7 +10,7 @@ interface EditTodoPageProps {
 
 /**
  * Todo 수정 페이지 - Server Component
- * API에서 Todo 상세를 가져와 표시하고, 수정 폼은 Client Component에 위임합니다.
+ * Server Action(getTodoById)으로 Todo 상세를 가져와 표시하고, 수정 폼은 Client Component에 위임합니다.
  */
 export default async function EditTodoPage({ params }: EditTodoPageProps) {
   const { todoId } = await params;

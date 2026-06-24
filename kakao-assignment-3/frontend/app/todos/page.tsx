@@ -1,11 +1,10 @@
-import Link from "next/link";
-import { getTodos } from "@/lib/api";
+import { getTodos } from "@/app/actions";
 import TodoCreateForm from "./components/TodoCreateForm";
 import TodoList from "./components/TodoList";
 
 /**
  * Todo 목록 페이지 - Server Component
- * API에서 Todo 목록을 가져오고, 표시용 컴포넌트와 Client 폼을 조합합니다.
+ * Server Action(getTodos)으로 Todo 목록을 가져오고, 표시용 컴포넌트와 Client 폼을 조합합니다.
  */
 export default async function TodosPage() {
   const todos = await getTodos();
@@ -27,15 +26,6 @@ export default async function TodosPage() {
 
         <main className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
           <TodoCreateForm />
-
-          <div className="mt-4 flex justify-end">
-            <Link
-              href="/todos/new"
-              className="text-sm font-medium text-[#672be0] hover:text-[#5a24c4]"
-            >
-              새 페이지에서 추가하기
-            </Link>
-          </div>
 
           <div className="mt-6 border-t border-gray-100 pt-6">
             <TodoList todos={todos} />

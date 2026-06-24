@@ -4,16 +4,11 @@ import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { createTodo } from "@/lib/client-api";
 
-interface TodoCreateFormProps {
-  /** 생성 후 이동할 경로. 없으면 현재 페이지를 새로고침합니다. */
-  redirectTo?: string;
-}
-
 /**
  * TodoCreateForm - Client Component
  * 텍스트 입력·추가 버튼·폼 제출 인터랙션을 처리합니다.
  */
-export default function TodoCreateForm({ redirectTo }: TodoCreateFormProps) {
+export default function TodoCreateForm() {
   const router = useRouter();
   const [inputValue, setInputValue] = useState("");
   const [inputError, setInputError] = useState("");
@@ -34,12 +29,7 @@ export default function TodoCreateForm({ redirectTo }: TodoCreateFormProps) {
     try {
       await createTodo({ text: trimmedText });
       setInputValue("");
-
-      if (redirectTo) {
-        router.push(redirectTo);
-      } else {
-        router.refresh();
-      }
+      router.refresh();
     } catch {
       setInputError("Todo 생성에 실패했습니다. 다시 시도해주세요.");
     } finally {
